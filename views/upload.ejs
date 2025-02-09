@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video</title>
+</head>
+<body>
+    <h1>Upload Your Video</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="video">Choose Video to Upload:</label>
+        <input type="file" name="video" accept="video/*" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <% if (typeof fileUrl !== 'undefined') { %>
+        <h2>Video Uploaded Successfully!</h2>
+        <p>File URL: <a href="<%= fileUrl %>" target="_blank"><%= fileUrl %></a></p>
+    <% } %>
+
+    <br>
+    <a href="/show">
+        <button type="button">View All Uploaded Videos</button>
+    </a>
+
+</body>
+</html>
