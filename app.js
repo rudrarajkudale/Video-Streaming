@@ -29,6 +29,7 @@ mongoose.connect(process.env.MONGO_URI, {
 const Video = mongoose.model("Video", new mongoose.Schema({
     name: String,
     url: String,
+    public_id: String, // To store Cloudinary's public_id for deletion
 }));
 
 // Configure Cloudinary
@@ -64,10 +65,10 @@ app.post("/upload", upload.single("video"), async (req, res) => {
         const newVideo = new Video({
             name: req.file.originalname,
             url: req.file.path,
+            public_id: req.file.filename, // Store public_id for later deletion
         });
 
         await newVideo.save();
-
         res.send("<script>alert('Video uploaded successfully!'); window.location='/show';</script>");
     } catch (error) {
         console.error("Upload error:", error);
@@ -75,18 +76,73 @@ app.post("/upload", upload.single("video"), async (req, res) => {
     }
 });
 
-
 // Show All Uploaded Videos
 app.get("/show", async (req, res) => {
     try {
-        const videos = await Video.find(); // Fetch all videos
-        console.log("Fetched videos:", videos); // Debugging line
-        res.render("show", { videos: videos });
+        const videos = await Video.find();
+        res.render("show", { videos });
     } catch (err) {
         console.error("Error fetching videos:", err);
         res.status(500).json({ message: "Error fetching videos" });
     }
 });
+
+app.get("/edit/:id", async (req, res) => {
+    try {
+        const video = await Video.findById(req.params.id);
+        if (!video) {
+            return res.status(404).send("Video not found");
+        }
+        res.render("edit", { video }); // Render the edit form
+    } catch (error) {
+        console.error("Edit page error:", error);
+        res.status(500).send("Server error");
+    }
+});
+
+app.post("/update/:id", async (req, res) => {
+    try {
+        const { name } = req.body;
+        const video = await Video.findByIdAndUpdate(req.params.id, { name }, { new: true });
+
+        if (!video) {
+            return res.status(404).send("Video not found");
+        }
+
+        res.send("<script>alert('Video updated successfully!'); window.location='/show';</script>");
+    } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).send("Error updating video");
+    }
+});
+
+
+// Delete Video Route
+app.delete("/delete/:id", async (req, res) => {
+    try {
+        const videoId = req.params.id;
+        const video = await Video.findById(videoId);
+
+        if (!video) {
+            return res.status(404).json({ message: "Video not found" });
+        }
+
+        // Extract public ID from Cloudinary URL
+        const publicId = video.url.split('/').pop().split('.')[0];
+
+        // Delete from Cloudinary
+        await cloudinary.uploader.destroy(publicId, { resource_type: "video" });
+
+        // Delete from MongoDB
+        await Video.findByIdAndDelete(videoId);
+
+        res.status(200).json({ message: "Video deleted successfully" });
+    } catch (error) {
+        console.error("Delete error:", error);
+        res.status(500).json({ message: "Error deleting video" });
+    }
+});
+
 
 // Start Server
 app.listen(PORT, () => {

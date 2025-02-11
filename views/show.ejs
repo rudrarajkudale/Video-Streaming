@@ -26,14 +26,17 @@
             background: #1e1e1e;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.2);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
 
         .video-card {
-            margin: 20px 0;
             padding: 15px;
             background: #272727;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
         video {
@@ -46,7 +49,41 @@
             font-size: 1.2rem;
         }
 
-        a {
+        .btn-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .edit-btn:hover {
+            background: #45a049;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .back-btn {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
@@ -58,8 +95,20 @@
             transition: 0.3s;
         }
 
-        a:hover {
+        .back-btn:hover {
             background: #e68900;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                grid-template-columns: repeat(1, 1fr);
+            }
         }
     </style>
 </head>
@@ -75,6 +124,10 @@
                         <source src="<%= video.url %>" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
+                    <div class="btn-container">
+                        <button class="btn edit-btn" onclick="editVideo('<%= video.id %>')">Edit</button>
+                        <button class="btn delete-btn" onclick="deleteVideo('<%= video.id %>')">Delete</button>
+                    </div>
                 </div>
             <% }) %>
         <% } else { %>
@@ -82,6 +135,28 @@
         <% } %>
     </div>
 
-    <a href="/">⬅ Go back to Upload</a>
+    <a href="/" class="back-btn">⬅ Go back to Upload</a>
+    <script>
+        function editVideo(videoId) {
+            window.location.href = `/edit/${videoId}`; // 🚀 Redirects to edit page
+        }
+    
+        async function deleteVideo(videoId) {
+            if (confirm("Are you sure you want to delete this video?")) { // 🚀 Confirmation popup
+                try {
+                    const response = await fetch(`/delete/${videoId}`, { method: "DELETE" });
+                    if (response.ok) {
+                        alert("Video deleted successfully!"); // 🚀 Alert on success
+                        window.location.reload();
+                    } else {
+                        alert("Error deleting video.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Failed to delete video.");
+                }
+            }
+        }
+    </script>    
 </body>
 </html>
